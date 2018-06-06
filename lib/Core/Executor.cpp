@@ -3161,7 +3161,14 @@ void Executor::callExternalFunction(ExecutionState &state,
       klee_warning_once(function, "%s", os.str().c_str());
   }
 
-  bool success = externalDispatcher->executeCall(function, target->inst, args);
+  bool success = false;
+  if (function->getName() != std::string("__cxa_atexit")) {
+    success = externalDispatcher->executeCall(function, target->inst, args);
+  } else {
+    klee_warning_once(
+        nullptr, "Calling external C++ atexit function. Please link with libc++.");
+  }
+
   if (!success) {
     terminateStateOnError(state, "failed external call: " + function->getName(),
                           External);
